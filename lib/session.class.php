@@ -19,7 +19,6 @@
             $db->query(
                 'CREATE TABLE users (
                     name string,
-                    enabled string,
                     key string,
                     PRIMARY KEY (name)
                 );'
@@ -55,37 +54,35 @@
             return $aUserData;
         }
 
+        function getUsers() {
+            $db = $this->db();
+
+            $oUserFetch = $db->prepare(
+                'SELECT * FROM users;'
+            );
+
+            // Create the table if it doesn't exist
+            $oUserFetch->execute();
+
+            $aRows = $oUserFetch->fetchAll();
+
+            return $aRows;
+        }
+
         function createUser($name, $key) {
             $db = $this->db();
-			$enabled = 'true';
 
             $oUserInsert = $db->prepare('
                 INSERT INTO users
-                    (name, key, enabled)
+                    (name, key)
                 VALUES
-                    (?,?,?);'
+                    (?,?);'
             );
 
             $aUserData = array(
-                $name, $key, $enabled
+                $name, $key
             );
 
             return $oUserInsert->execute($aUserData);
-        }
-		
-		function setUserEnabled($name, $enabled) {
-            $db = $this->db();
-
-            $oUserUpdate = $db->prepare('
-                UPDATE users SET enabled = ? WHERE name = ?;'
-            );
-
-            $aUserData = array(
-                $enabled, $name
-            );
-
-            return $oUserUpdate->execute($aUserData);
-        }
-		
-		
+        }	
     }

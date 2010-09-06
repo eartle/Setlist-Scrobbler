@@ -53,20 +53,13 @@
         </style>
     </head>
     <body>
-        <div><a href="?logout=1">Not <?=htmlentities($aUser['name'])?>?</a></div>
+        <div><a href="?logout=1">Not <?=htmlentities($aUser['user_name'])?>?</a></div>
         <div class="content">
-<?
-            $oSession->setUserEnabled($user, $_GET['enabled'] );
-            $aUser = $oSession->getUserByName($user);
-?>
             <div class="heading">Setlist Scrobbler</div>
-            <div class="item">
-                <form>
-                    Enabled:<br>
-                    <input type="radio" name="enabled" value="true" checked> Yes
-					<input type="radio" name="enabled" value="false"> No
-                    <input type="submit" value="Save">
-                </form>
+            <div class="item" style="width:40%; margin-top: 1%">
+                <small>
+Success! Your Last.fm events will now be scrobbled when setlists are added to Songkick.
+                </small>
             </div>
         </div>
     </body>
