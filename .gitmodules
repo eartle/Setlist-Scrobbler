@@ -1,0 +1,3 @@
+[submodule "lib/php-last.fm-api"]
+	path = lib/php-last.fm-api
+	url = http://github.com/eartle/php-last.fm-api.git
