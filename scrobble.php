@@ -99,6 +99,9 @@
 								
 								// Make sure we don't scrobble it again!
 								$oSession->addEventId($aUser['user_name'], $oPastEvent->getId());
+								
+								// email myself so that I can celebrate!
+								mail('eartle@gmail.com', 'An event was scrobbled!', $aUser['user_name'] . ' scrobbled the event: ' . $aEventAttributes["displayName"]);
 							}
 						}
 					}
