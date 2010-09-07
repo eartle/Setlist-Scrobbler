@@ -65,13 +65,10 @@
 					
 						$aEventAttributes = $oEvent->attributes();
 					
-						echo $aEventAttributes["type"], PHP_EOL;
-					
 						if ($aEventAttributes["type"] == "Concert") {
 							// Only scrobble tracks form concerts because festivals are too messy
 						
 							// Try to find a setlist on SongKick for this event
-							echo $aEventAttributes["displayName"], PHP_EOL;
 							curl_setopt($curl, CURLOPT_URL, "http://api.songkick.com/api/3.0/events/" . $aEventAttributes["id"] . "/setlists.json?apikey=musichackdaylondon");
 						
 							$response = curl_exec($curl);
@@ -81,6 +78,7 @@
 						
 							if ($aSetlist) {
 								// we have a setlist so scrobble this track
+								echo $aEventAttributes["displayName"] . PHP_EOL;
 							
 								$trackTime = intval($oPastEvent->getStartDate());
 								$trackLength = 60 * 4;
@@ -89,10 +87,7 @@
 									// scrobble every track in the playlist
 								
 									$trackTimeDate = getdate($trackTime);
-								
-									echo $trackTimeDate["hours"] . " " . $trackTimeDate["minutes"] . PHP_EOL;
-								
-									echo $aSetlist[0]->{'artist'}->{'displayName'} . $aSetlistItem->{'name'} . $trackTime . PHP_EOL;
+									echo $aSetlist[0]->{'artist'}->{'displayName'} . " - " . $aSetlistItem->{'name'} . " @ " . $trackTimeDate["hours"] . ":" . $trackTimeDate["minutes"] . PHP_EOL;
 								
 									$oScrob = new Scrobbler($aUser['user_name'], $aUser['user_session'], $oCall->getApiKey(), $oCall->getApiSecret());
 						        	$scrobbleResponse = $oScrob->scrobble($aSetlist[0]->{'artist'}->{'displayName'}, $aSetlistItem->{'name'}, $trackTime);
@@ -113,3 +108,4 @@
 	}
 
     print "OK";
+
