@@ -44,7 +44,7 @@
 					// so nowsearch for the event on SongKick
 					
 					$dateString = $eventDate->format("Y-m-d");
-					$params = array("apikey" => "musichackdaylondon",
+					$params = array("apikey" => "D7XQBrzFd8K6bv9Z",
 										"artists" => implode(",", $oPastEvent->getArtists()),
 					 					"min_date" => $dateString,
 										"max_date" => $dateString);
