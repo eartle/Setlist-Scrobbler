@@ -84,7 +84,6 @@
             curl_setopt($this->curl, CURLOPT_POST, 1);
             curl_setopt($this->curl, CURLOPT_POSTFIELDS, $query);
 
-            $response = curl_exec($this->curl);
-            return trim($response) == 'OK';
+            return curl_exec($this->curl);
         }
     }
