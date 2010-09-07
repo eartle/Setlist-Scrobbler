@@ -16,13 +16,23 @@
             // Reinit the db to nuke the error that caused the create to occur
             $db = $this->db(true);
 
-            $db->query(
-                'CREATE TABLE users (
-                    name string,
-                    key string,
-                    PRIMARY KEY (name)
-                );'
+           	$result = $db->query('
+                CREATE TABLE users (
+					user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_name TEXT,
+                    user_session TEXT
+                )'
             );
+
+	        $db->query('
+	            CREATE TABLE events (
+	                user_id INTEGER,
+	                event_id INTEGER,
+	
+					PRIMARY KEY (user_id, event_id),
+	                FOREIGN KEY (user_id) REFERENCES users(user_id) 
+	            )'
+	        );
         }
 
         function validate($session) {
@@ -37,8 +47,8 @@
         function getUserByName($name) {
             $db = $this->db();
 
-            $oUserFetch = $db->prepare(
-                'SELECT * FROM users WHERE name = ?;'
+            $oUserFetch = $db->prepare('
+                SELECT * FROM users WHERE user_name = ?'
             );
 
             // Create the table if it doesn't exist
@@ -57,8 +67,8 @@
         function getUsers() {
             $db = $this->db();
 
-            $oUserFetch = $db->prepare(
-                'SELECT * FROM users;'
+            $oUserFetch = $db->prepare('
+                SELECT * FROM users'
             );
 
             // Create the table if it doesn't exist
@@ -69,20 +79,86 @@
             return $aRows;
         }
 
-        function createUser($name, $key) {
+        function createUser($name, $session) {
             $db = $this->db();
 
-            $oUserInsert = $db->prepare('
-                INSERT INTO users
-                    (name, key)
-                VALUES
-                    (?,?);'
-            );
+			$aUser = $this->getUserByName($name);
 
-            $aUserData = array(
-                $name, $key
-            );
+			if ($aUser) {
+				// the user exists in the db so update their entry
+				
+				$oUserCreate = $db->prepare('
+	                UPDATE users
+					SET 
+	                    user_session=?
+	                WHERE
+	                    user_name=?'
+	            );
 
-            return $oUserInsert->execute($aUserData);
+	            $aUserData = array(
+	                $session, $name
+	            );
+			}
+			else {
+			
+	            $oUserCreate = $db->prepare('
+	                INSERT INTO users
+	                    (user_name, user_session)
+	                VALUES
+	                    (?,?)'
+	            );
+
+	            $aUserData = array(
+	                $name, $session
+	            );
+			}
+
+            return $oUserCreate->execute($aUserData);
         }	
+
+        function getEventIds($name) {
+        	$db = $this->db();
+
+            $oEventIdsFetch = $db->prepare('
+                SELECT 
+					events.event_id
+				FROM
+					users,
+					events
+				WHERE
+					events.user_id = users.user_id
+				AND
+					users.user_name = ?'
+            );
+
+	        $oEventIdsFetchData = array(
+	            $name
+	        );
+
+            $oEventIdsFetch->execute($oEventIdsFetchData);
+
+            return $oEventIdsFetch->fetchAll();
+		}
+
+        function addEventId($name, $id) {
+			$db = $this->db();
+
+            $oEventInsert = $db->prepare('
+                INSERT INTO
+					events
+				SELECT 
+					user_id AS user_id,
+					? AS events 
+				FROM 
+					users 
+				WHERE 
+					user_name=?'
+            );
+
+            $oEventInsertData = array(
+                $id, $name
+            );
+
+            return $oEventInsert->execute($oEventInsertData);
+        }
     }
