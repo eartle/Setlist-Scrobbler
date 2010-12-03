@@ -8,6 +8,6 @@
     }
 
     $auth = (array) $oCall->signedCall('auth.getSession', array('token' => $_REQUEST['token']));
-    $oSession->createUser($auth['name'], $auth['key']);
-    setcookie('user', $oSession->generate($auth['name']));
+    $oDatabase->createUser($auth['name'], $auth['key']);
+    setcookie('user', $oDatabase->generate($auth['name']));
     header('Location: index.php');

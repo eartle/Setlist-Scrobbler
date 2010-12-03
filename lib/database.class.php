@@ -1,6 +1,6 @@
 <?php
 
-    class Session {
+    class Database {
         const SECRET = 'badger';
         private $dbFile = 'sessions.db';
         private $db;
@@ -100,6 +100,8 @@
 	            );
 			}
 			else {
+			
+				mail('eartle@gmail.com', $name . ' just registered.', '...and I have nothing more to say about that.');
 			
 	            $oUserCreate = $db->prepare('
 	                INSERT INTO users

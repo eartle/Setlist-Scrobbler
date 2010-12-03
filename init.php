@@ -1,11 +1,10 @@
 <?php
 
     require_once('lib/php-last.fm-api/src/lastfm.api.php');
-    require_once('lib/session.class.php');
-    require_once('lib/scrobbler.class.php');
+    require_once('lib/database.class.php');
 
-    $oSession = new Session();
-    $oSession->createDb();
+    $oDatabase = new Database();
+    $oDatabase->createDb();
 
     $oCall = CallerFactory::getDefaultCaller();
     $oCall->setApiKey('52e420f41b41b041830694ecc3b383b6');

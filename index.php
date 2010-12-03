@@ -1,14 +1,14 @@
 <?php
 	require_once('init.php');
 
-	$user = $oSession->validate($_COOKIE['user']);
-	$aUser = $oSession->getUserByName($user);
+	$user = $oDatabase->validate($_COOKIE['user']);
+	$aUser = $oDatabase->getUserByName($user);
 	
 	if (!$aUser || isset($_GET['logout'])) {
 		setcookie('user', '');
 	}
 	
-	$notLoggedIn = (!isset($_COOKIE['user']) || !$oSession->validate($_COOKIE['user']) || $_GET['logout'] == 1);
+	$notLoggedIn = (!isset($_COOKIE['user']) || !$oDatabase->validate($_COOKIE['user']) || $_GET['logout'] == 1);
 ?>
 <html>
     <head>
@@ -50,24 +50,31 @@
         </style>
     </head>
     <body>
+	<?
+	if (!$notLoggedIn) {
+		print ('<div><a href="?logout=1">Not ' . htmlentities($aUser['user_name']) . '?</a></div>');
+	}
+	?>
         <div class="content">
 			<div class="heading">Setlist Scrobbler</div>
 			
 			<?
 				if ($notLoggedIn) {
 					print('
-						<a href="http://www.last.fm/api/auth/?api_key=' . $oCall->getApiKey() . '">Register</a> for Setlist Scrobbler.
+						<div class="item" style="width:40%; margin-top: 1%">
+							<small>Setlist Scrobbler will scrobble the setlists found on <a href="http://www.songkick.com">SongKick</a> for the headliners of the <a href="http://www.last.fm">Last.fm</a> events you\'ve attended.<br><a href="http://www.last.fm/api/auth/?api_key=' . $oCall->getApiKey() . '">Click here</a> to authenticate with <a href="http://www.last.fm">Last.fm</a> and start using Setlist Scrobbler.</small>
+						</div>
 						');
 				}
 				else {
 					print('
-					<div><a href="?logout=1">Not ' . htmlentities($aUser['user_name']) . '?</a></div>
+					
 					<div class="item" style="width:40%; margin-top: 1%">
-						<small>Success! Your Last.fm events will now be scrobbled when setlists are added to Songkick.</small>
+						<small>Success!  Your <a href="http://www.last.fm">Last.fm</a> events will now be scrobbled when setlists are added to <a href="http://www.songkick.com">SongKick</a>.</small>
 					</div>
 					');
 					
-					$aScrobbledEvents = $oSession->getEventIds($aUser['user_name']);
+					$aScrobbledEvents = $oDatabase->getEventIds($aUser['user_name']);
 					
 					if ($aScrobbledEvents) {
 						print('
@@ -77,11 +84,13 @@
 					
 						foreach ($aScrobbledEvents as $aEvent) {
 							$oEvent = Event::getInfo($aEvent['event_id']);
+							$image = preg_replace('/34/', '/34s/', $oEvent->getImage(Media::IMAGE_SMALL));
 						
 							print( '
 							<div>
-							<img src="' . $oEvent->getImage(Media::IMAGE_MEDIUM) . '" alt="' . $oEvent->getTitle() . '"/>
-							<a href="' . $oEvent->getUrl() . '">' . $oEvent->getTitle() . '</a>
+							<a href="' . $oEvent->getUrl() . '">
+							<img width="34" height="34" src="' . $image . '" alt="' . $oEvent->getTitle() . '"/>' .
+							$oEvent->getTitle() . '</a>
 							</div>
 							' );
 						}
