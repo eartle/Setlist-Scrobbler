@@ -62,7 +62,7 @@
 				if ($notLoggedIn) {
 					print('
 						<div class="item" style="width:40%; margin-top: 1%">
-							<small>Setlist Scrobbler will scrobble the setlists found on <a href="http://www.songkick.com">SongKick</a> for the headliners of the <a href="http://www.last.fm">Last.fm</a> events you\'ve attended.<br><a href="http://www.last.fm/api/auth/?api_key=' . $oCall->getApiKey() . '">Click here</a> to authenticate with <a href="http://www.last.fm">Last.fm</a> and start using Setlist Scrobbler.</small>
+							<small>Setlist Scrobbler will scrobble the setlists found on <a href="http://www.setlist.fm">Setlist.fm</a> for the headliners of the <a href="http://www.last.fm">Last.fm</a> events you\'ve attended.<br><a href="http://www.last.fm/api/auth/?api_key=' . $oCall->getApiKey() . '">Click here</a> to authenticate with <a href="http://www.last.fm">Last.fm</a> and start using Setlist Scrobbler.</small>
 						</div>
 						');
 				}
@@ -70,7 +70,7 @@
 					print('
 					
 					<div class="item" style="width:40%; margin-top: 1%">
-						<small>Success!  Your <a href="http://www.last.fm">Last.fm</a> events will now be scrobbled when setlists are added to <a href="http://www.songkick.com">SongKick</a>.</small>
+						<small>Success!  Your <a href="http://www.last.fm">Last.fm</a> events will now be scrobbled when setlists are added to <a href="http://www.setlist.fm">Setlist.fm</a>.</small>
 					</div>
 					');
 					
@@ -101,7 +101,7 @@
 			?>
 			
 			<div class="item" style="margin-top: 1%">
-				<a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mobbler.co.uk/sls/index.php" data-text="Scrobble your @lastfm events that have setlists on @songkick with Setlist Scrobbler." data-count="horizontal" data-via="eartle">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+				<a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mobbler.co.uk/sls/index.php" data-text="Scrobble your @lastfm events with Setlist Scrobbler." data-count="horizontal" data-via="eartle">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
 			</div>
 			<div class="item" style="margin-top: 1%">
 				<iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fmobbler.co.uk%2Fsls%2Findex.php&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:80px;" allowTransparency="true"></iframe>

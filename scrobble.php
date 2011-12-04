@@ -1,8 +1,15 @@
 <?php
 
     require_once('init.php');
+	
+	// Find the Setlist Scrobbler account so that we can
+	// shout at the user when their event gets scrobbled
+	$aSlsUser = $oDatabase->getUserByName('setscrobbler');
+	$slsSession = new Session( $aSlsUser['user_name'], $aSlsUser['user_session'], false );
+	
+	$aUsers = $oDatabase->getUsers();
 
-	foreach ($oDatabase->getUsers() as $aUser) {
+	foreach ($aUsers as $aUser) {
 	
 		try {
 			print PHP_EOL . PHP_EOL . $aUser["user_name"];
@@ -26,7 +33,7 @@
 					$eventDate->setTime($date["hours"], $date["minutes"]);
 					
 					if ($oPastEvent->getStartDate() < $two_weeks_ago) {
-						// we can't scrobble tracks older than 2 weeks so just stop
+						// we can't scrobble tracks older than 4 weeks so just stop
 						print ' was over two weeks ago.';
 						break;
 					}
@@ -46,21 +53,19 @@
 					
 					if ($scrobbled == false) {
 						// we haven't scrobbled this event
-						// so nowsearch for the event on SongKick
+						// so now search for the event on setlist.fm
 						
 						$aPastEventArtists = $oPastEvent->getArtists();
 						$headliner = $aPastEventArtists['headliner'];
 						print ' has headliner ' . $headliner . ' and';
 						
 						
-						$dateString = $eventDate->format("Y-m-d");
-						$params = array("apikey" => "D7XQBrzFd8K6bv9Z",
-											"artist_name" => $headliner,
-											"min_date" => $dateString,
-											"max_date" => $dateString);
+						$dateString = $eventDate->format("d-m-Y");
+						$params = array("artistName" => $headliner,
+											"date" => $dateString);
 		
 						$curl  = curl_init();
-						$url = "http://api.songkick.com/api/3.0/events.xml?" . http_build_query($params, '', '&');
+						$url = "http://api.setlist.fm/rest/0.1/search/setlists?" . http_build_query($params, '', '&');
 			
 						curl_setopt($curl, CURLOPT_URL, $url);
 						curl_setopt($curl, CURLOPT_POST, 0);
@@ -68,74 +73,70 @@
 						curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
 			
 						$response = curl_exec($curl);
-						$response = new SimpleXMLElement($response);
-			
-						foreach ($response->results->event as $oEvent) {
-							// Look through the SongKick search responses
-							print ' has been found';
-						
-							$aEventAttributes = $oEvent->attributes();
-						
-							if ($aEventAttributes["type"] == "Concert") {
-								// Only scrobble tracks form concerts because festivals are too messy
-								print ', is a concert';
+
+						try {
+							$response = new SimpleXMLElement($response);
+				
+							foreach ($response->setlist as $oSetlist) {
+								// Look through the Setlist.fm search responses
+								$aArtistAttributes = $oSetlist->artist->attributes();
 							
-								// Try to find a setlist on SongKick for this event
-								curl_setopt($curl, CURLOPT_URL, "http://api.songkick.com/api/3.0/events/" . $aEventAttributes["id"] . "/setlists.json?apikey=D7XQBrzFd8K6bv9Z");
-							
-								$response = curl_exec($curl);
-								$response = json_decode($response);
-							
-								$aSetlist = $response->{'resultsPage'}->{'results'}->{'setlist'};
-							
-								if ($aSetlist) {
-									print ' and we\'ve found a list of setlists';
+								if ($aArtistAttributes["name"] == $headliner) {
+									// This is the setlist for the headliner
+									print ' has been found';
 									
-									foreach ($aSetlist as $oSetlist) 
-										{
-										if ($headliner == $oSetlist->{'artist'}->{'displayName'}) {
+									if ($oSetlist->sets->set) {
+										print ' there is at least one set ';
 										
-											// we have a setlist so scrobble this track
-											print ' The headliner: ' . $aEventAttributes["displayName"] . PHP_EOL;
+										$trackTime = intval($oPastEvent->getStartDate());
+										// Assume that the headliner starts 2 hours after the doors open
+										$trackTime += 60 * 120;
+										$trackLength = 60 * 4;
+
+										$session = new Session( $aUser['user_name'], $aUser['user_session'], false );
+															
+										foreach ($oSetlist->sets->set as $oSet) {
+											// we have a set so scrobble it
+											print ' The headliner: ' . $aArtistAttributes["name"] . PHP_EOL;
+								
+											foreach ($oSet->song as $aSong) {
+												// scrobble every track in the set
+												$aSongAttributes = $aSong->attributes();
+												
+												$trackTitle = $aSongAttributes["name"];
 										
-											$trackTime = intval($oPastEvent->getStartDate());
-											// Assume that the headliner starts 2 hours after the doors open
-											$trackTime += 60 * 120;
-											$trackLength = 60 * 4;
-											
-											$session = new Session( $aUser['user_name'], $aUser['user_session'], false );
-									
-											foreach ($oSetlist->{'setlistItem'} as $aSetlistItem) {
-												// scrobble every track in the playlist
-											
 												$trackTimeDate = getdate($trackTime);
-												print $oSetlist->{'artist'}->{'displayName'} . " - " . $aSetlistItem->{'name'} . " @ " . $trackTimeDate["hours"] . ":" . $trackTimeDate["minutes"] . PHP_EOL;
-											
-												$scrobbleResponse = Track::scrobble($oSetlist->{'artist'}->{'displayName'}, $aSetlistItem->{'name'}, $trackTime, $session);
-								
-												var_dump($scrobbleResponse);
-								
+												
+												print $headliner . " - " . $trackTitle . " @ " . $trackTimeDate["hours"] . ":" . $trackTimeDate["minutes"] . PHP_EOL;
+										
+												$scrobbleResponse = Track::scrobble($headliner, $trackTitle, $trackTime, $session);
+												//var_dump($scrobbleResponse);
+							
 												$trackTime += $trackLength;
 											}
-											
-											// Make sure we don't scrobble it again!
-											$oDatabase->addEventId($aUser['user_name'], $oPastEvent->getId());
-											
-											// email myself so that I can celebrate!
-											mail('eartle@gmail.com', 'An event was scrobbled!', $aUser['user_name'] . ' scrobbled the event: ' . $aEventAttributes["displayName"]);
 										}
-										else {
-											print ' (not the headliner)';
-										}
+											
+										// Make sure we don't scrobble it again!
+										$oDatabase->addEventId($aUser['user_name'], $oPastEvent->getId());
+										
+										$message = 'The event [url=' . $oPastEvent->getUrl() . ']' . $oPastEvent->getTitle() . '[/url] has had its [url=' . $oSetlist->url . ']Setlist.fm setlist[/url] scrobbled for you by [url=http://mobbler.co.uk/sls/]Setlist Scrobbler[/url].';
+										
+										// email myself so that I can celebrate!
+										mail('eartle@gmail.com', 'An event was scrobbled!', $aUser['user_name'] . ' scrobbled the event: ' . $oPastEvent->getTitle());
+										
+										// Shout at the user from the setlist scrobble account
+										// so that they know something has happened
+										$scrobbleResponse = User::shout($aUser['user_name'], $message, $slsSession);
+										//var_dump($scrobbleResponse);
+									}
+									else {
+										print ', but doesn\'t have a setlist. :(';
 									}
 								}
-								else {
-									print ', but doesn\'t have a setlist. :(';
-								}
 							}
-							else {
-								print ', but isn\'t a concert. :(';
-							}
+						}
+						catch (Exception $e) {
+							print 'Caught exception: ' .  $e->getMessage() . PHP_EOL;
 						}
 					}
 				}
