@@ -1,0 +1,8 @@
+RewriteEngine On
+RewriteRule ^users/?$ ./users.php [L]
+RewriteRule ^events/?$ ./events.php [L]
+
+<FilesMatch "scrobble\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
